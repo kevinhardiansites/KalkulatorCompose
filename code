@@ -1,0 +1,190 @@
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.icons.Icons
+import androidx.compose.material3.icons.filled.Clear
+import androidx.compose.material3.icons.filled.KeyboardArrowDown
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.lifecycle.ViewModel
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.selection.DisableSelection
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import kotlin.math.round
+import kotlin.text.Regex
+import kotlin.text.contains
+import kotlin.text.isNotEmpty
+
+class CalculatorViewModel : ViewModel() {
+    var currentInput by mutableStateOf("0")
+    var currentResult by mutableStateOf("0")
+    var currentExpression by mutableStateOf("")
+
+    fun onDigitClick(digit: String) {
+        if (currentInput == "0" && digit != "0") {
+            currentInput = digit
+        } else if (currentInput != "0") {
+            currentInput += digit
+        }
+    }
+
+    fun onOperatorClick(operator: String) {
+        currentExpression += "$currentInput $operator "
+        currentInput = "0"
+    }
+
+    fun onEqualClick() {
+        val expression = currentExpression + currentInput
+        val result = evaluateExpression(expression)
+        currentResult = result.toString()
+        currentExpression = ""
+        currentInput = result.toString()
+    }
+
+    fun onClearClick() {
+        currentInput = "0"
+        currentResult = "0"
+        currentExpression = ""
+    }
+
+    fun onDotClick() {
+        if (!currentInput.contains(".")) {
+            currentInput += "."
+        }
+    }
+
+    private fun evaluateExpression(expression: String): Double {
+        try {
+            val result = round(1000000000.0 * eval(expression)) / 1000000000.0
+            return result
+        } catch (e: Exception) {
+            return 0.0
+        }
+    }
+}
+
+@Composable
+fun CalculatorApp(viewModel: CalculatorViewModel) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        verticalArrangement = Arrangement.Bottom,
+        horizontalAlignment = Alignment.End
+    ) {
+        BasicTextField(
+            value = viewModel.currentInput,
+            onValueChange = { newValue ->
+                viewModel.currentInput = newValue
+            },
+            keyboardOptions = KeyboardOptions.Default.copy(
+                keyboardType = KeyboardType.Number
+            ),
+            keyboardActions = KeyboardActions(
+                onDone = { viewModel.onEqualClick() }
+            ),
+            modifier = Modifier
+                .fillMaxWidth()
+                .border(1.dp, Color.Gray)
+                .background(MaterialTheme.colorScheme.background)
+                .padding(8.dp)
+                .border(2.dp, Color.Black)
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            CalculatorButton(text = "7", onClick = { viewModel.onDigitClick("7") })
+            CalculatorButton(text = "8", onClick = { viewModel.onDigitClick("8") })
+            CalculatorButton(text = "9", onClick = { viewModel.onDigitClick("9") })
+            CalculatorButton(text = "/", onClick = { viewModel.onOperatorClick("/") })
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            CalculatorButton(text = "4", onClick = { viewModel.onDigitClick("4") })
+            CalculatorButton(text = "5", onClick = { viewModel.onDigitClick("5") })
+            CalculatorButton(text = "6", onClick = { viewModel.onDigitClick("6") })
+            CalculatorButton(text = "*", onClick = { viewModel.onOperatorClick("*") })
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            CalculatorButton(text = "1", onClick = { viewModel.onDigitClick("1") })
+            CalculatorButton(text = "2", onClick = { viewModel.onDigitClick("2") })
+            CalculatorButton(text = "3", onClick = { viewModel.onDigitClick("3") })
+            CalculatorButton(text = "-", onClick = { viewModel.onOperatorClick("-") })
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            CalculatorButton(text = ".", onClick = { viewModel.onDotClick() })
+            CalculatorButton(text = "0", onClick = { viewModel.onDigitClick("0") })
+            CalculatorButton(text = "=", onClick = { viewModel.onEqualClick() })
+            CalculatorButton(text = "+", onClick = { viewModel.onOperatorClick("+") })
+        }
+    }
+}
+
+@Composable
+fun CalculatorButton(text: String, onClick: () -> Unit) {
+    Button(
+        onClick = onClick,
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(64.dp)
+    ) {
+        Text(text, fontSize = 24.sp)
+    }
+}
+
+@Preview
+@Composable
+fun CalculatorPreview() {
+    val viewModel = remember { CalculatorViewModel() }
+    CalculatorApp(viewModel)
+}
+
+class MainActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContent {
+            val viewModel = remember { CalculatorViewModel() }
+            CalculatorApp(viewModel)
+        }
+    }
+}
